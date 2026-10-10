@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quiz Funnel Demo – Home Energy Check</title>
+<meta name="description" content="Demo multi-step quiz funnel for Meta Ads lead generation: progress bar, qualification questions, lead capture, tracking-ready events.">
+<style>
+:root{--brand:#f59e0b;--brand-d:#d97706;--ink:#1c2230;--mute:#667085;--bg:#fff8eb;--line:#ecdcb8}
+*{box-sizing:border-box;margin:0}
+body{font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:18px}
+.top{width:100%;max-width:560px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;font-weight:800}
+.top small{font-weight:500;color:var(--mute)}
+.card{width:100%;max-width:560px;background:#fff;border-radius:22px;box-shadow:0 18px 50px #b4781a22;padding:30px 28px;animation:in .3s}
+@keyframes in{from{opacity:0;transform:translateY(8px)}}
+.bar{height:8px;background:#f3e7c9;border-radius:8px;overflow:hidden;margin-bottom:6px}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--brand),var(--brand-d));transition:width .35s}
+.step{color:var(--mute);font-size:13px;margin-bottom:18px}
+h1{font-size:28px;line-height:1.2;margin-bottom:10px}
+h2{font-size:23px;line-height:1.25;margin-bottom:18px}
+p.lead{color:var(--mute);margin-bottom:22px}
+.opts{display:grid;gap:10px}
+.opt{display:flex;align-items:center;gap:12px;text-align:left;width:100%;background:#fff;border:2px solid var(--line);border-radius:14px;padding:14px 16px;font:inherit;font-weight:600;cursor:pointer;color:var(--ink);transition:.15s}
+.opt:hover{border-color:var(--brand);background:#fffaf0;transform:translateY(-1px)}
+.opt.sel{border-color:var(--brand-d);background:#fff3d6}
+.opt .e{font-size:24px}
+.btn{width:100%;background:var(--brand);color:#fff;border:0;border-radius:14px;padding:16px;font:inherit;font-weight:700;font-size:17px;cursor:pointer;transition:.15s;margin-top:6px}
+.btn:hover{background:var(--brand-d)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.back{background:none;border:0;color:var(--mute);cursor:pointer;margin-top:14px;font:inherit;font-size:14px}
+label{display:block;font-weight:600;font-size:14px;margin:12px 0 4px}
+input[type=text],input[type=email],input[type=tel]{width:100%;padding:13px 14px;border:2px solid var(--line);border-radius:12px;font:inherit}
+input:focus{outline:none;border-color:var(--brand-d)}
+.err{color:#c0392b;font-size:13px;min-height:16px;margin-top:3px}
+.chk{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--mute);margin:14px 0 6px}
+.trust{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-top:18px;font-size:12px;color:var(--mute)}
+.res{background:#fff3d6;border-radius:16px;padding:18px;margin:14px 0 18px}
+.res b{font-size:30px;color:var(--brand-d);display:block}
+.sum{font-size:14px;color:var(--mute);margin-bottom:18px}
+.sum li{margin-left:18px}
+.dbg{width:100%;max-width:560px;margin-top:16px;background:#1c2230;color:#ffe6a8;border-radius:12px;padding:12px 14px;font:12px/1.6 ui-monospace,Consolas,monospace;white-space:pre-wrap;max-height:130px;overflow:auto}
+.note{max-width:560px;text-align:center;color:var(--mute);font-size:12px;margin-top:14px}
+@media(max-width:480px){.card{padding:24px 18px}h1{font-size:24px}}
+</style>
+</head>
+<body>
+<div class="top"><span>⚡ BrightHome</span><small>Free · takes 60 seconds</small></div>
+<main class="card" id="card"></main>
+<div class="dbg" id="dbg">// tracking events (dataLayer) – ready for Meta Pixel / GA4</div>
+<p class="note">Demo funnel for a fictional company. No data is stored or sent anywhere.</p>
+
+<script>
+const Q=[
+ {k:'type',t:'What type of home do you live in?',o:[['🏠','House'],['🏢','Apartment'],['🏘️','Townhouse'],['🏡','Other']]},
+ {k:'own',t:'Do you own your home?',o:[['✅','Yes, I own it'],['🔑','I rent'],['🏗️','Planning to buy']]},
+ {k:'bill',t:'What is your average monthly energy bill?',o:[['💵','Under $100'],['💵💵','$100–$200'],['💵💵💵','$200–$350'],['🔥','Over $350']]},
+ {k:'goal',t:'What is your main goal?',o:[['📉','Lower my bills'],['🌱','Go greener'],['🔋','Backup power'],['📈','Raise home value']]},
+ {k:'when',t:'When would you like to start?',o:[['⚡','As soon as possible'],['📅','Within 3 months'],['🔎','Just exploring']]}
+];
+const A={},dbg=document.getElementById('dbg'),card=document.getElementById('card');
+let i=-1;
+window.dataLayer=window.dataLayer||[];
+function ev(name,p){window.dataLayer.push({event:name,...p});dbg.textContent+='\n'+name+(p?' '+JSON.stringify(p):'');dbg.scrollTop=dbg.scrollHeight}
+const total=Q.length+1;
+function bar(n){return `<div class="bar"><i style="width:${Math.round(n/total*100)}%"></i></div><div class="step">Step ${n} of ${total}</div>`}
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function intro(){
+ card.innerHTML=`<h1>See how much you could save on energy this year</h1><p class="lead">Answer 5 quick questions and get a free personalised savings estimate. No obligation.</p><button class="btn" id="go">Start the quiz →</button><div class="trust"><span>🔒 Private &amp; secure</span><span>⭐ 4.8 rated</span><span>⏱️ 60 seconds</span></div>`;
+ document.getElementById('go').onclick=()=>{ev('QuizStart');next()};
+}
+function question(n){
+ const q=Q[n];
+ card.innerHTML=bar(n+1)+`<h2>${q.t}</h2><div class="opts">`+q.o.map(o=>`<button class="opt${A[q.k]===o[1]?' sel':''}" data-v="${esc(o[1])}"><span class="e">${o[0]}</span>${o[1]}</button>`).join('')+`</div>`+(n?'<button class="back" id="bk">← Back</button>':'');
+ card.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{A[q.k]=b.dataset.v;b.classList.add('sel');ev('QuizAnswer',{question:q.k,answer:A[q.k]});setTimeout(next,220)});
+ const bk=document.getElementById('bk');if(bk)bk.onclick=()=>{i--;render()};
+}
+function contact(){
+ card.innerHTML=bar(total)+`<h2>Almost done! Where should we send your estimate?</h2>
+ <form id="f" novalidate>
+ <label for="n">First name</label><input id="n" type="text" autocomplete="given-name"><div class="err" id="en"></div>
+ <label for="e">Email</label><input id="e" type="email" autocomplete="email"><div class="err" id="ee"></div>
+ <label for="p">Phone</label><input id="p" type="tel" autocomplete="tel" placeholder="(555) 123-4567"><div class="err" id="ep"></div>
+ <label class="chk"><input type="checkbox" id="c"> <span>I agree to be contacted about my estimate. No spam, unsubscribe anytime.</span></label><div class="err" id="ec"></div>
+ <button class="btn" type="submit">Get my free estimate</button></form>
+ <button class="back" id="bk">← Back</button><div class="trust"><span>🔒 Your data is never sold</span></div>`;
+ document.getElementById('bk').onclick=()=>{i--;render()};
+ document.getElementById('f').onsubmit=e=>{
+  e.preventDefault();
+  const v=id=>document.getElementById(id).value.trim(),set=(id,m)=>{document.getElementById(id).textContent=m};
+  let ok=true;
+  ['en','ee','ep','ec'].forEach(x=>set(x,''));
+  if(v('n').length<2){set('en','Please enter your first name');ok=false}
+  if(!/^\S+@\S+\.\S+$/.test(v('e'))){set('ee','Please enter a valid email');ok=false}
+  if(v('p').replace(/\D/g,'').length<7){set('ep','Please enter a valid phone number');ok=false}
+  if(!document.getElementById('c').checked){set('ec','Please tick the box to continue');ok=false}
+  if(!ok){ev('LeadFormError');return}
+  A.name=v('n');A.email=v('e');A.phone=v('p');
+  ev('Lead',{value:25,currency:'USD',qualified:qualified()});done();
+ };
+}
+function qualified(){return A.own!=='I rent'&&A.bill!=='Under $100'}
+function est(){const m={'Under $100':300,'$100–$200':620,'$200–$350':1100,'Over $350':1700};return m[A.bill]||500}
+function done(){
+ const q=qualified();
+ card.innerHTML=`<div class="bar"><i style="width:100%"></i></div><h1>Thanks, ${esc(A.name)}! 🎉</h1>
+ <div class="res"><span style="color:var(--mute);font-size:14px">Your estimated yearly savings</span><b>$${est().toLocaleString()}</b><span style="font-size:13px;color:var(--mute)">Illustrative demo figure</span></div>
+ <ul class="sum"><li>Home: ${esc(A.type)} · ${esc(A.own)}</li><li>Monthly bill: ${esc(A.bill)}</li><li>Goal: ${esc(A.goal)}</li><li>Timing: ${esc(A.when)}</li></ul>
+ <p class="lead">${q?'A specialist will contact you within 24 hours to confirm your estimate.':'We will email you a free guide with tips to cut your energy costs.'}</p>
+ <button class="btn" id="rs">Restart demo</button>`;
+ document.getElementById('rs').onclick=()=>{for(const k in A)delete A[k];i=-1;ev('QuizRestart');render()};
+}
+function next(){i++;render()}
+function render(){
+ if(i<0)return intro();
+ if(i<Q.length){question(i);ev('StepView',{step:i+1})}
+ else{contact();ev('StepView',{step:total})}
+}
+const gm=location.search.match(/[?&]goto=(\d)/);
+if(gm){i=Math.min(+gm[1],Q.length+1)-2;Q.slice(0,i+1).forEach((q,n)=>A[q.k]=q.o[n%2][1]);next()}else render();
+if(/[?&]demo/.test(location.search)){
+ const pick=[1,0,2,0,0].map((x,n)=>Q[n].o[x][1]);
+ setTimeout(()=>document.getElementById('go').click(),500);
+ pick.forEach((v,n)=>setTimeout(()=>{const b=[...card.querySelectorAll('.opt')].find(o=>o.dataset.v===v);b&&b.click()},1100+n*700));
+ setTimeout(()=>{if(document.getElementById('n')){n.value='Jane';e.value='jane@example.com';p.value='5551234567';c.checked=true;f.requestSubmit()}},1100+5*700+500);
+}
+</script>
+</body>
+</html>
