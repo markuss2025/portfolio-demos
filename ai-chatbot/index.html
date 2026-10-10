@@ -88,6 +88,7 @@ function handle(t){
 function send(t){t=t.trim();if(!t)return;add(t,'me');inp.value='';handle(t)}
 document.getElementById('f').onsubmit=e=>{e.preventDefault();send(inp.value)};
 bot("Hi, I'm Aria 👋 I can answer questions and book appointments. What do you need?",home);
+if(/[?&]demo/.test(location.search)){['Pricing','Book an appointment','Jane Cooper','jane@example.com','This Friday'].forEach((t,i)=>setTimeout(()=>send(t),1200+i*1300))}
 </script>
 </body>
 </html>

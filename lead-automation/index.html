@@ -111,6 +111,7 @@ $('csv').onclick=()=>{
  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([c],{type:'text/csv'}));a.download='leads.csv';a.click();log('Exported CSV');
 };
 render();
+if(/[?&]demo/.test(location.search)&&!leads.length)$('seed').click();
 </script>
 </body>
 </html>
