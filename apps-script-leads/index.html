@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Google Sheets Lead Automation (Apps Script Demo)</title>
+<style>
+:root{--g:#188038;--ink:#202124;--mute:#5f6368;--line:#dadce0;--bg:#f8f9fa}
+*{box-sizing:border-box;margin:0}
+body{font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg);padding:20px}
+.wrap{max-width:1100px;margin:auto}
+h1{font-size:25px}.sub{color:var(--mute);margin:4px 0 18px}
+.note{background:#e8f0fe;border:1px solid #c6dafc;border-radius:10px;padding:10px 14px;font-size:13px;margin-bottom:16px}
+.grid{display:grid;grid-template-columns:300px 1fr;gap:18px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px}
+h2{font-size:16px;margin-bottom:10px}
+label{display:block;font-weight:600;font-size:13px;margin:10px 0 3px}
+input,select{width:100%;padding:9px;border:1px solid var(--line);border-radius:8px;font:inherit}
+input:focus,select:focus{outline:2px solid #1a73e8;border-color:transparent}
+button{font:inherit;font-weight:600;border:0;border-radius:8px;padding:10px 14px;cursor:pointer}
+.primary{background:var(--g);color:#fff;width:100%;margin-top:14px}
+.ghost{background:#fff;color:var(--g);border:1px solid var(--g)}
+.bar{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.sheet{overflow:auto;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:640px}
+th{background:#f1f3f4;color:var(--mute);font-weight:600;text-align:left;padding:7px 9px;border-bottom:1px solid var(--line);position:sticky;top:0}
+td{padding:7px 9px;border-bottom:1px solid #eee;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis}
+tr.Hot td{background:#fde8e6}tr.Warm td{background:#fff3da}tr.Cold td{background:#e8eef7}tr.Invalid td{background:#eee;color:#777}
+tr.pending td{background:#fff}
+.mail{margin-top:14px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:12px;font-size:13px;white-space:pre-wrap;display:none}
+.mail b{display:block;color:var(--mute);font-weight:600;margin-bottom:4px}
+.log{margin-top:14px;background:#1f2933;color:#a7f3d0;border-radius:8px;padding:10px 12px;font:12px/1.6 ui-monospace,Consolas,monospace;white-space:pre-wrap;max-height:130px;overflow:auto}
+.links{margin-top:18px;font-size:14px}.links a{color:#1a73e8;margin-right:14px}
+.rules{font-size:13px;color:var(--mute)}.rules li{margin-left:18px}
+@media(max-width:860px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Google Sheets Lead Automation</h1>
+  <p class="sub">Google Apps Script: validate, score and route leads automatically, with email notifications and a daily summary.</p>
+  <div class="note"><b>Demo simulation.</b> This page runs the same scoring logic as the real script (<code>Logic.gs</code>) so you can see the result without a Google account. The Google Sheets part is in <code>Code.gs</code>. Concept project; no data is sent anywhere.</div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>1. Add a lead</h2>
+      <p class="rules">Like a new row from a Google Form:</p>
+      <form id="f" novalidate>
+        <label for="n">Name</label><input id="n" placeholder="Jane Cooper">
+        <label for="e">Email</label><input id="e" placeholder="jane@acme.com">
+        <label for="s">Company size</label>
+        <select id="s"><option>1</option><option>2-10</option><option>11-50</option><option>50+</option></select>
+        <label for="b">Budget (USD)</label><input id="b" type="number" value="1500" min="0">
+        <label for="t">Timeline</label>
+        <select id="t"><option value="asap">ASAP</option><option value="this month">This month</option><option value="exploring">Exploring</option></select>
+        <button class="primary" type="submit">Add row</button>
+      </form>
+      <h2 style="margin-top:18px">Scoring rules</h2>
+      <ul class="rules">
+        <li>Budget: up to 40 points</li><li>Company size: up to 30</li><li>Timeline: up to 30</li><li>Business email: +10 (max 100)</li>
+        <li>70+ Hot, 40+ Warm, else Cold</li><li>Invalid rows are flagged, never emailed</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>2. Your "Leads" sheet</h2>
+      <div class="bar">
+        <button class="ghost" id="proc" type="button">Process new leads</button>
+        <button class="ghost" id="sum" type="button">Send daily summary</button>
+        <button class="ghost" id="seed" type="button">Add 5 sample rows</button>
+        <button class="ghost" id="clr" type="button">Clear</button>
+      </div>
+      <div class="sheet"><table>
+        <thead><tr><th>#</th><th>Name</th><th>Email</th><th>Size</th><th>Budget</th><th>Timeline</th><th>Score</th><th>Status</th><th>Notified</th></tr></thead>
+        <tbody id="tb"></tbody>
+      </table></div>
+      <div class="mail" id="mail"></div>
+      <div class="log" id="log">// execution log</div>
+    </div>
+  </div>
+
+  <p class="links">
+    Source on GitHub:
+    <a href="https://github.com/markuss2025/portfolio-demos/blob/main/apps-script-leads/Code.gs" target="_blank" rel="noopener">Code.gs</a>
+    <a href="https://github.com/markuss2025/portfolio-demos/blob/main/apps-script-leads/Logic.gs" target="_blank" rel="noopener">Logic.gs</a>
+    <a href="https://github.com/markuss2025/portfolio-demos/blob/main/apps-script-leads/README.md" target="_blank" rel="noopener">README</a>
+  </p>
+</div>
+
+<script src="logic.js"></script>
+<script>
+// Simulation of the sheet. Scoring and validation come from logic.js (identical to Logic.gs).
+var rows = [];
+var $ = function (id) { return document.getElementById(id); };
+var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+function log(m) { var l = $('log'); l.textContent += '\n[' + new Date().toLocaleTimeString() + '] ' + m; l.scrollTop = l.scrollHeight; }
+
+function render() {
+  $('tb').innerHTML = rows.map(function (r, i) {
+    return '<tr class="' + (r.status || 'pending') + '"><td>' + (i + 2) + '</td><td>' + esc(r.name) + '</td><td>' + esc(r.email) +
+      '</td><td>' + esc(r.size) + '</td><td>' + esc(r.budget) + '</td><td>' + esc(r.timeline) +
+      '</td><td>' + (r.score === undefined ? '' : r.score) + '</td><td>' + (r.status || '') + '</td><td>' + esc(r.notified || '') + '</td></tr>';
+  }).join('') || '<tr><td colspan="9" style="text-align:center;color:#888;padding:20px">No rows yet. Add a lead or sample rows.</td></tr>';
+}
+
+function addRow(lead) { rows.push(lead); log('New row added (row ' + (rows.length + 1) + ')'); render(); }
+
+function processNewRows() {
+  var n = 0;
+  rows.forEach(function (r, i) {
+    if (r.status) return; // already processed, skipped
+    var check = validateLead(r);
+    if (!check.ok) { r.status = 'Invalid'; r.notified = check.errors.join('; '); log('Row ' + (i + 2) + ' invalid: ' + r.notified); n++; return; }
+    r.score = scoreLead(r); r.status = tierFor(r.score);
+    var mail = buildConfirmationEmail(r, r.status);
+    r.notified = 'Confirmation sent';
+    log('Row ' + (i + 2) + ': score ' + r.score + ' -> ' + r.status + ', confirmation emailed');
+    if (r.status === 'Hot') log('Row ' + (i + 2) + ': owner alerted (Hot lead)');
+    $('mail').style.display = 'block';
+    $('mail').innerHTML = '<b>Email preview to ' + esc(r.email) + ' · Subject: ' + esc(mail.subject) + '</b>' + esc(mail.body);
+    n++;
+  });
+  if (!n) log('Nothing to process (all rows already have a status)');
+  render();
+}
+
+$('f').onsubmit = function (e) {
+  e.preventDefault();
+  addRow({ name: $('n').value.trim(), email: $('e').value.trim(), size: $('s').value, budget: $('b').value, timeline: $('t').value });
+  $('n').value = ''; $('e').value = '';
+};
+$('proc').onclick = processNewRows;
+$('sum').onclick = function () {
+  var s = summarize(rows);
+  log('Daily summary emailed: ' + s.total + ' leads | Hot ' + s.Hot + ', Warm ' + s.Warm + ', Cold ' + s.Cold + ', Invalid ' + s.Invalid);
+};
+$('seed').onclick = function () {
+  [['Alex Morgan', 'alex@acme.com', '50+', 5000, 'asap'], ['Sam Lee', 'sam@gmail.com', '2-10', 600, 'this month'],
+   ['Jo Rivera', 'jo@gmail.com', '1', 50, 'exploring'], ['Kim Park', 'kim@northwind.io', '11-50', 2500, 'asap'],
+   ['', 'not-an-email', '1', -5, 'exploring']]
+    .forEach(function (a) { rows.push({ name: a[0], email: a[1], size: a[2], budget: a[3], timeline: a[4] }); });
+  log('5 sample rows added'); render();
+};
+$('clr').onclick = function () { rows = []; $('mail').style.display = 'none'; log('Sheet cleared'); render(); };
+render();
+if (/[?&]demo/.test(location.search)) { $('seed').click(); setTimeout(processNewRows, 300); setTimeout(function(){ $('sum').click(); }, 600); }
+</script>
+</body>
+</html>
