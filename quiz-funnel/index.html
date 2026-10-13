@@ -5,6 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Quiz Funnel Demo – Home Energy Check</title>
 <meta name="description" content="Demo multi-step quiz funnel for Meta Ads lead generation: progress bar, qualification questions, lead capture, tracking-ready events.">
+<script>
+// GA4 with Consent Mode v2: analytics storage stays denied until the visitor accepts.
+// Skipped in ?demo mode (used for screenshots) so test runs do not pollute the reports.
+(function(){
+ var ID='G-8S4NKPHJN6';
+ window.dataLayer=window.dataLayer||[];
+ window.gtag=function(){window.dataLayer.push(arguments)};
+ window.GA_ON=!/[?&]demo/.test(location.search);
+ if(!window.GA_ON)return;
+ var saved=null;try{saved=localStorage.getItem('ga_consent')}catch(e){}
+ gtag('consent','default',{analytics_storage:saved==='granted'?'granted':'denied',ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',wait_for_update:500});
+ gtag('js',new Date());
+ gtag('config',ID);
+ var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id='+ID;document.head.appendChild(s);
+})();
+</script>
 <style>
 :root{--brand:#f59e0b;--brand-d:#d97706;--ink:#1c2230;--mute:#667085;--bg:#fff8eb;--line:#ecdcb8}
 *{box-sizing:border-box;margin:0}
@@ -40,14 +56,19 @@ input:focus{outline:none;border-color:var(--brand-d)}
 .sum li{margin-left:18px}
 .dbg{width:100%;max-width:560px;margin-top:16px;background:#1c2230;color:#ffe6a8;border-radius:12px;padding:12px 14px;font:12px/1.6 ui-monospace,Consolas,monospace;white-space:pre-wrap;max-height:130px;overflow:auto}
 .note{max-width:560px;text-align:center;color:var(--mute);font-size:12px;margin-top:14px}
+.cc{position:fixed;left:12px;right:12px;bottom:12px;max-width:560px;margin:auto;background:#1c2230;color:#fff;border-radius:14px;padding:14px 16px;font-size:13px;line-height:1.45;display:none;gap:12px;align-items:center;flex-wrap:wrap;box-shadow:0 10px 30px #0006;z-index:9}
+.cc span{flex:1 1 240px}
+.cc button{font:inherit;font-weight:700;border:0;border-radius:10px;padding:9px 14px;cursor:pointer}
+.cc .ok{background:var(--brand);color:#1c2230}.cc .no{background:#3a4358;color:#fff}
 @media(max-width:480px){.card{padding:24px 18px}h1{font-size:24px}}
 </style>
 </head>
 <body>
 <div class="top"><span>⚡ BrightHome</span><small>Free · takes 60 seconds</small></div>
 <main class="card" id="card"></main>
-<div class="dbg" id="dbg">// tracking events (dataLayer) – ready for Meta Pixel / GA4</div>
-<p class="note">Demo funnel for a fictional company. No data is stored or sent anywhere.</p>
+<div class="dbg" id="dbg">// tracking events (dataLayer) – sent to GA4 only after you accept analytics</div>
+<p class="note">Demo funnel for a fictional company. Form fields (name, email, phone) are never stored or sent anywhere. With your consent, anonymous step and conversion events go to Google Analytics 4.</p>
+<div class="cc" id="cc" role="dialog" aria-label="Analytics consent"><span>We use Google Analytics to count visits and quiz steps. No form data is sent. Accept analytics?</span><button class="ok" id="ccy" type="button">Accept</button><button class="no" id="ccn" type="button">Decline</button></div>
 
 <script>
 const Q=[
@@ -60,7 +81,19 @@ const Q=[
 const A={},dbg=document.getElementById('dbg'),card=document.getElementById('card');
 let i=-1;
 window.dataLayer=window.dataLayer||[];
-function ev(name,p){window.dataLayer.push({event:name,...p});dbg.textContent+='\n'+name+(p?' '+JSON.stringify(p):'');dbg.scrollTop=dbg.scrollHeight}
+// internal event name -> GA4 event name (generate_lead is a GA4 recommended event)
+const GA4={QuizStart:'quiz_start',StepView:'quiz_step',QuizAnswer:'quiz_answer',Lead:'generate_lead',LeadFormError:'form_error',QuizRestart:'quiz_restart'};
+function ev(name,p){window.dataLayer.push({event:name,...p});if(window.GA_ON&&GA4[name])gtag('event',GA4[name],p||{});dbg.textContent+='\n'+name+(p?' '+JSON.stringify(p):'');dbg.scrollTop=dbg.scrollHeight}
+(function(){
+ if(!window.GA_ON)return;
+ var saved=null;try{saved=localStorage.getItem('ga_consent')}catch(e){}
+ if(saved)return;
+ var box=document.getElementById('cc');box.style.display='flex';
+ function set(v){try{localStorage.setItem('ga_consent',v)}catch(e){}
+  gtag('consent','update',{analytics_storage:v==='granted'?'granted':'denied'});box.style.display='none'}
+ document.getElementById('ccy').onclick=function(){set('granted')};
+ document.getElementById('ccn').onclick=function(){set('denied')};
+})();
 const total=Q.length+1;
 function bar(n){return `<div class="bar"><i style="width:${Math.round(n/total*100)}%"></i></div><div class="step">Step ${n} of ${total}</div>`}
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
