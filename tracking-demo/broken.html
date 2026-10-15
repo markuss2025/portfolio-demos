@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Tracking Demo: Troubleshooting Page (3 known bugs)</title>
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-NNRFBVQT');</script>
+<!-- End Google Tag Manager -->
+<!-- BUG 2 (on purpose): GA4 is installed a second time on the page, GTM also sends it -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-8ERDMEGKCT"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-8ERDMEGKCT');</script>
+<style>
+:root{--brand:#2563eb;--ink:#14213d;--mute:#5b6478;--bg:#f4f7fb;--line:#d7deea}
+*{box-sizing:border-box;margin:0}
+body{font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);padding:0 16px 40px}
+.banner{background:#14213d;color:#fff;text-align:center;padding:10px 12px;font-size:14px;margin:0 -16px 24px}
+.wrap{max-width:720px;margin:0 auto}
+h1{font-size:28px;line-height:1.25;margin-bottom:8px}
+p.lead{color:var(--mute);margin-bottom:22px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px;margin-bottom:18px}
+.card h2{font-size:18px;margin-bottom:12px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+a.link{color:var(--brand);font-weight:600;text-decoration:none;border:2px solid var(--brand);border-radius:12px;padding:10px 16px;display:inline-flex;gap:8px;align-items:center}
+a.link .icon{font-size:20px}
+button.cta{background:var(--brand);color:#fff;border:0;border-radius:12px;padding:12px 20px;font:inherit;font-weight:700;cursor:pointer}
+label{display:block;font-weight:600;font-size:14px;margin:12px 0 4px}
+input,textarea{width:100%;padding:12px;border:2px solid var(--line);border-radius:10px;font:inherit}
+.err{color:#b42318;font-size:13px;min-height:16px}
+.ok{background:#e7f6ec;border:1px solid #9ad2ae;color:#14532d;padding:14px;border-radius:12px;display:none;margin-top:12px;font-weight:600}
+.log{background:#14213d;color:#cfe3ff;border-radius:12px;padding:12px 14px;font:12px/1.6 ui-monospace,Consolas,monospace;white-space:pre-wrap;min-height:70px}
+.note{font-size:13px;color:var(--mute)}
+</style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NNRFBVQT" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<div class="banner">DEMO with 3 known bugs, built for the troubleshooting case. Not a real business.</div>
+<div class="wrap">
+<h1>Event test page: with 3 bugs</h1>
+<p class="lead">A test page for tracking: one form, a phone link, an email link, a button and a file download. Fake data only. Nothing is sent anywhere.</p>
+
+<div class="card"><h2>Contact links</h2>
+<div class="row">
+<a class="link" id="phone-link" href="tel:+37300000000" aria-label="Phone"><span class="icon">&#9742;</span></a>
+<a class="link" id="email-link" href="mailto:demo@example.com">demo@example.com</a>
+<a class="link" id="pdf-link" href="tracking-sheet-sample.pdf" download>Download sample tracking sheet (PDF)</a>
+</div></div>
+<div class="card"><h2>Call to action</h2>
+<div class="row"><button class="cta" id="cta-button" type="button">Book a free check</button>
+<span class="note">Scrolls to the form below.</span></div></div>
+<div class="card"><h2>Contact form</h2>
+<form id="contact-form" novalidate>
+<label for="f-name">Name</label><input id="f-name" name="name" type="text" autocomplete="off">
+<div class="err" id="e-name"></div>
+<label for="f-email">Email</label><input id="f-email" name="email" type="email" autocomplete="off">
+<div class="err" id="e-email"></div>
+<label for="f-msg">Message</label><textarea id="f-msg" name="message" rows="3"></textarea>
+<div class="err" id="e-msg"></div>
+<button class="cta" id="submit-btn" type="submit" style="margin-top:10px">Send</button>
+<div class="ok" id="ok-box">Thank you! (Demo success message. Nothing was sent.)</div>
+</form></div>
+<div class="card"><h2>On-page log (pushes made by this page)</h2><div class="log" id="log">waiting for events...</div></div>
+<p class="note">Container GTM-NNRFBVQT. GA4 property: Tracking Demo. Test data only.</p>
+</div>
+<script>
+(function(){
+ var logEl=document.getElementById('log'),lines=[];
+ function log(t){lines.push(new Date().toLocaleTimeString()+'  '+t);logEl.textContent=lines.slice(-8).join('\n')}
+ window.dataLayer=window.dataLayer||[];
+ document.getElementById('cta-button').addEventListener('click',function(){
+  log('click: cta-button');
+  document.getElementById('contact-form').scrollIntoView({behavior:'smooth'});
+ });
+ ['phone-link','email-link','pdf-link'].forEach(function(id){
+  document.getElementById(id).addEventListener('click',function(e){
+   log('click: '+id);
+   if(id==='phone-link'||id==='email-link'){e.preventDefault();}
+  });
+ });
+ var f=document.getElementById('contact-form');
+ f.addEventListener('submit',function(e){
+  e.preventDefault();
+  var n=f['name'].value.trim(),m=f['email'].value.trim(),g=f['message'].value.trim(),ok=true;
+  document.getElementById('e-name').textContent=n.length<2?(ok=false,'Please enter your name'):'';
+  document.getElementById('e-email').textContent=/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(m)?'':(ok=false,'Please enter a valid email');
+  document.getElementById('e-msg').textContent=g.length<5?(ok=false,'Please write a short message'):'';
+  if(!ok){log('submit: invalid, no success event');return;}
+  document.getElementById('ok-box').style.display='block';
+  window.dataLayer.push({event:'form_success',form_id:'contact'});
+  log('dataLayer.push form_success (form_id=contact)');
+  f.reset();
+ });
+})();
+</script>
+</body>
+</html>
