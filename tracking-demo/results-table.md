@@ -48,3 +48,15 @@ Evidence: evidence/google-ads/ (screenshots 10-13). Container with the Ads tags:
 
 ## Evidence note
 Screenshots were re-captured in English (no account avatar or name) with the same tests on 2026-10-15 (about 13:38-14:10 page clock): folder `evidence-en/` (before-fix B1-B3, after-fix A1-A3, google-ads C1-C4, page 00). Counts match the first run: generate_lead 4 times for 3 empty and 1 valid submit, click_phone 0, 2 page views per load before the fix; 1 and 1 after. The first Russian-interface captures are archived and not used.
+
+
+## Case 4: Meta Pixel through GTM, browser-side only (2026-10-15)
+Setup: dataset (pixel) "Tracking Demo", ID 2131649120892137, created in Meta Events Manager (Business portfolio, no ad spend, no payment). In GTM: two Custom HTML tags: base code + PageView (All Pages) and Lead (Custom Event form_success). Published as GTM version 4 (10 tags).
+
+| Test | Expected | Actual |
+|---|---|---|
+| Page load | 1 PageView | 1 (Tag Assistant; request facebook.com/tr ev=PageView, HTTP 200) |
+| Empty form, click Send | 0 Lead | 0 (no ev=Lead request) |
+| Valid form, click Send | 1 Lead | 1 (Tag Assistant; request ev=Lead, HTTP 200) |
+
+Limits: browser-side only, no Conversions API, no purchase events, no deduplication. Events in the Events Manager overview were not confirmed yet at the time of writing (Meta says up to 30 minutes). Evidence: evidence-en/meta-pixel/. Container: gtm/container-final-with-meta.json.
