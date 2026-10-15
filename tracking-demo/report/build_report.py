@@ -7,7 +7,7 @@ from PIL import Image as PI
 import os
 
 base = os.path.dirname(os.path.abspath(__file__))
-ev = os.path.join(base, '..', 'evidence')
+ev = os.path.join(base, '..', 'evidence-en')
 ss = getSampleStyleSheet()
 H1 = ParagraphStyle('H1', parent=ss['Heading1'], fontSize=17, spaceAfter=4, textColor=colors.HexColor('#14213d'))
 H2 = ParagraphStyle('H2', parent=ss['Heading2'], fontSize=12, spaceBefore=8, spaceAfter=3, textColor=colors.HexColor('#14213d'))
@@ -72,12 +72,13 @@ f += [tbl([
 f += [Spacer(1, 6), Paragraph('Other checks (passed in both runs): email link = 1 click_email, CTA button = 1 click_cta, PDF link = 1 file_download (GA4 enhanced measurement).', B)]
 f += [PageBreak()]
 f += [Paragraph('3. Evidence screenshots (raw, not edited)', H2)]
-for rel, cap in [
-    ('before-fix/2026-10-15_01-bug1-bug3-tag-assistant-tags-fired.jpg', 'Before: generate_lead fired 4 times, click_phone not fired (Tag Assistant).'),
-    ('before-fix/2026-10-15_09-bug2-ga4-debugview-two-page_view-same-second.jpg', 'Before: two page_view in the same second on one page load (GA4 DebugView, 13:03:27).'),
-    ('after-fix/2026-10-15_05-index-tag-assistant-tags-fired.jpg', 'After: each tag fired once, click_phone fired (Tag Assistant, fixed container, correct page).'),
-    ('after-fix/2026-10-15_06-index-tag-assistant-hits-sent.jpg', 'After: hits sent to GA4: one page view, one generate_lead, click_phone, click_email, click_cta, file_download.')]:
-    f += [KeepTogether([img(rel, 108), Paragraph(cap, C), Spacer(1, 5)])]
+for rel, cap, w in [
+    ('before-fix/2026-10-15_B1_tag-assistant-lead-fired-4-times-phone-not-fired.jpg', 'Before (Tag Assistant): generate_lead fired 4 times (3 empty submits + 1 valid), click_phone did not fire, an extra page_view tag fired.', 80),
+    ('before-fix/2026-10-15_B2_tag-assistant-ga4-hits-4-leads-2-page-views.jpg', 'Before (Tag Assistant): hits sent to GA4 after one page load and the test clicks: 2 Page View and 4 generate_lead.', 80),
+    ('before-fix/2026-10-15_B3_ga4-debugview-timeline-3-empty-submits-3-leads-cropped.jpg', 'Before (GA4 DebugView, cropped): 3 generate_lead within 2 seconds for 3 empty submits (1:43:32-1:43:33 PM), then 1 for the valid submit.', 46),
+    ('after-fix/2026-10-15_A1_tag-assistant-all-tags-fired-once.jpg', 'After (Tag Assistant, fixed container): each tag fired once; click_phone fired.', 80),
+    ('after-fix/2026-10-15_A2_tag-assistant-ga4-hits-sent.jpg', 'After (Tag Assistant): hits sent to GA4: one Page View, one generate_lead, click_phone, click_email, click_cta, file_download.', 80)]:
+    f += [KeepTogether([img(rel, w), Paragraph(cap, C), Spacer(1, 4)])]
 f += [PageBreak()]
 f += [Paragraph('4. Test log', H2)]
 f += [tbl([
