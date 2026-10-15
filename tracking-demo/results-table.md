@@ -44,3 +44,7 @@ Side effect to note: the Google tag for Ads also sends page-view and remarketing
 
 Honest limit: Google Ads counts a conversion only for visitors who clicked an ad (they carry a gclid). No ad was run, so the Google Ads interface shows no conversions. This test verifies that the tag fires at the right moment and sends the request, not real ad conversions.
 Evidence: evidence/google-ads/ (screenshots 10-13). Container with the Ads tags: gtm/container-final-with-ads.json (published as GTM version 3).
+
+
+## Evidence note
+Screenshots were re-captured in English (no account avatar or name) with the same tests on 2026-10-15 (about 13:38-14:10 page clock): folder `evidence-en/` (before-fix B1-B3, after-fix A1-A3, google-ads C1-C4, page 00). Counts match the first run: generate_lead 4 times for 3 empty and 1 valid submit, click_phone 0, 2 page views per load before the fix; 1 and 1 after. The first Russian-interface captures are archived and not used.
