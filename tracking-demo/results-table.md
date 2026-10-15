@@ -30,3 +30,17 @@ A hard-coded gtag.js with the same Measurement ID next to the GTM Google tag did
 - Standard GA4 reports (events from DebugView appear in the Events list after up to 24 hours).
 - Key events: `generate_lead` and `click_phone` are to be marked after they appear in the Events list.
 - Other browsers, mobile, consent banner.
+
+## Case 3: Google Ads conversion tag through GTM (2026-10-15)
+Setup: Google Ads account 219-390-1909 (no campaigns started, no payment details entered). Conversion action "Demo lead" (category: submit lead form, source: manual tag, default value 1 USD as a placeholder). In GTM: Conversion Linker (All Pages), Google tag for the Ads ID (Initialization), Google Ads conversion tag on Custom Event `form_success`.
+
+| Test | Expected | First run | After fix |
+|---|---|---|---|
+| Empty form, click Send | Ads conversion tag does not fire | not fired | not fired |
+| Valid form, click Send | Ads conversion tag fires once | fired 1 time, but Tag Assistant warned "hits deferred" (no Google tag for the AW-ID in the container) | fired 1 time, conversion hit sent, no warning |
+
+Issue found and fixed: the conversion tag alone does not send its request until a Google tag with the same AW- ID exists in the container. Fix: added a Google tag with the AW- ID (Initialization - All Pages).
+Side effect to note: the Google tag for Ads also sends page-view and remarketing hits to Google Ads.
+
+Honest limit: Google Ads counts a conversion only for visitors who clicked an ad (they carry a gclid). No ad was run, so the Google Ads interface shows no conversions. This test verifies that the tag fires at the right moment and sends the request, not real ad conversions.
+Evidence: evidence/google-ads/ (screenshots 10-13). Container with the Ads tags: gtm/container-final-with-ads.json (published as GTM version 3).
