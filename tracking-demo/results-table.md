@@ -62,3 +62,5 @@ Setup: dataset (pixel) "Tracking Demo", ID 2131649120892137, created in Meta Eve
 Limits: browser-side only, no Conversions API, no purchase events, no deduplication. Events in the Events Manager overview were not confirmed yet at the time of writing (Meta says up to 30 minutes). Evidence: evidence-en/meta-pixel/. Container: gtm/container-final-with-meta.json.
 
 Update 2026-10-16: Meta Events Manager overview for dataset "Tracking Demo" shows PageView (Active, 2 total) and Lead (Active, 2 total), integration Meta Pixel, website markuss2025.github.io. The totals include one Tag Assistant preview run and one live run (1 PageView and 1 Lead each). Screenshot: evidence-en/meta-pixel/2026-10-16_M2_events-manager-overview-pageview-lead-active-cropped.jpg
+
+Update 2026-10-16 (GA4): events from the demo page now appear in the GA4 Events list (click_cta, click_email, click_phone, file_download, generate_lead, page_view, scroll, ...). `generate_lead` and `click_phone` were marked as key events. Screenshot: evidence-en/ga4/2026-10-16_G1_ga4-key-events-generate_lead-click_phone-cropped.jpg. Still no standard reports or conversion numbers are claimed: test data only.
