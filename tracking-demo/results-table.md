@@ -60,3 +60,5 @@ Setup: dataset (pixel) "Tracking Demo", ID 2131649120892137, created in Meta Eve
 | Valid form, click Send | 1 Lead | 1 (Tag Assistant; request ev=Lead, HTTP 200) |
 
 Limits: browser-side only, no Conversions API, no purchase events, no deduplication. Events in the Events Manager overview were not confirmed yet at the time of writing (Meta says up to 30 minutes). Evidence: evidence-en/meta-pixel/. Container: gtm/container-final-with-meta.json.
+
+Update 2026-10-16: Meta Events Manager overview for dataset "Tracking Demo" shows PageView (Active, 2 total) and Lead (Active, 2 total), integration Meta Pixel, website markuss2025.github.io. The totals include one Tag Assistant preview run and one live run (1 PageView and 1 Lead each). Screenshot: evidence-en/meta-pixel/2026-10-16_M2_events-manager-overview-pageview-lead-active-cropped.jpg
